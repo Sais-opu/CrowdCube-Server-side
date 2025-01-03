@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const port = process.env.PORT || 5000;
 const app = express();
@@ -53,6 +53,20 @@ async function connectMongoDB() {
             } catch (error) {
                 console.error('Error fetching campaigns:', error);
                 res.status(500).send({ message: 'Error fetching campaigns' });
+            }
+        });
+        // Route to fetch details of a specific campaign by ID
+        app.get('/campaign/:id', async (req, res) => {
+            try {
+                const campaign = await campaignsCollection.findOne({ _id: new ObjectId(req.params.id) });
+                if (campaign) {
+                    res.json(campaign);
+                } else {
+                    res.status(404).send({ message: 'Campaign not found' });
+                }
+            } catch (error) {
+                console.error('Error fetching campaign details:', error);
+                res.status(500).send({ message: 'Error fetching campaign details' });
             }
         });
 
