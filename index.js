@@ -90,6 +90,30 @@ async function connectMongoDB() {
                 res.status(500).json({ message: 'Error processing donation' });
             }
         })
+        app.post('/campaigns', async (req, res) => {
+            try {
+                const { image, campaignTitle, campaignType, description, minimumDonationAmount, deadline, userEmail, userName } = req.body;
+                const newCampaign = {
+                    image,
+                    campaignTitle,
+                    campaignType,
+                    description,
+                    minimumDonationAmount,
+                    deadline: new Date(deadline),
+                    userEmail,
+                    userName,
+                    createdAt: new Date(),
+                };
+        
+                const campaignsCollection = client.db('crowdcube').collection('campaign');
+                const result = await campaignsCollection.insertOne(newCampaign);
+        
+                res.status(201).json({ message: 'Campaign added successfully', campaign: result.ops[0] });
+            } catch (error) {
+                console.error('Error adding campaign:', error);
+                res.status(500).send({ message: 'Error adding campaign' });
+            }
+        });
 
 
         // Test route to check server status
