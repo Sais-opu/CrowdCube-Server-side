@@ -114,6 +114,22 @@ async function connectMongoDB() {
                 res.status(500).send({ message: 'Error adding campaign' });
             }
         });
+        app.get('/myCampaign', async (req, res) => {
+            try {
+                const userEmail = req.query.userEmail; // Assume email is passed as a query param.
+                if (!userEmail) {
+                    return res.status(400).send({ message: 'User email is required' });
+                }
+        
+                const campaignsCollection = client.db('crowdcube').collection('campaign');
+                const userCampaigns = await campaignsCollection.find({ userEmail }).toArray();
+                res.json(userCampaigns);
+            } catch (error) {
+                console.error('Error fetching user campaigns:', error);
+                res.status(500).send({ message: 'Error fetching user campaigns' });
+            }
+        });
+        
 
 
         // Test route to check server status
