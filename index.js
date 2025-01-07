@@ -129,6 +129,22 @@ async function connectMongoDB() {
                 res.status(500).send({ message: 'Error fetching user campaigns' });
             }
         });
+        app.delete('/campaigns/:id', async (req, res) => {
+            try {
+                const { id } = req.params;
+                const campaignsCollection = client.db('crowdcube').collection('campaign');
+                const result = await campaignsCollection.deleteOne({ _id: new ObjectId(id) });
+                if (result.deletedCount === 1) {
+                    res.status(200).json({ message: 'Campaign deleted successfully' });
+                } else {
+                    res.status(404).json({ message: 'Campaign not found' });
+                }
+            } catch (error) {
+                console.error('Error deleting campaign:', error);
+                res.status(500).json({ message: 'Error deleting campaign' });
+            }
+        });
+        
         
 
 
