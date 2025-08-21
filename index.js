@@ -23,7 +23,7 @@ const client = new MongoClient(uri, {
 async function connectMongoDB() {
     try {
         // Connect the client to the server
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
         const campaignsCollection = client.db('crowdcube').collection('campaign');
@@ -72,7 +72,7 @@ async function connectMongoDB() {
         app.post('/donate', async (req, res) => {
             try {
                 const { campaignId, userEmail, userName } = req.body;
-                
+
                 // Insert the donation data into the 'donated' collection
                 const donationsCollection = client.db('crowdcube').collection('donated');
                 const donationData = {
@@ -81,11 +81,11 @@ async function connectMongoDB() {
                     userName,
                     donatedAt: new Date(),
                 };
-        
+
                 await donationsCollection.insertOne(donationData);
                 console.log('Donation received:', campaignId, userEmail, userName);
                 res.status(201).json({ message: 'Donation successful' });
-            }catch (error) {
+            } catch (error) {
                 console.error('Error processing donation:', error);
                 res.status(500).json({ message: 'Error processing donation' });
             }
@@ -104,10 +104,10 @@ async function connectMongoDB() {
                     userName,
                     createdAt: new Date(),
                 };
-        
+
                 const campaignsCollection = client.db('crowdcube').collection('campaign');
                 const result = await campaignsCollection.insertOne(newCampaign);
-        
+
                 res.status(201).json({ message: 'Campaign added successfully', campaign: result.ops[0] });
             } catch (error) {
                 console.error('Error adding campaign:', error);
@@ -120,7 +120,7 @@ async function connectMongoDB() {
                 if (!userEmail) {
                     return res.status(400).send({ message: 'User email is required' });
                 }
-        
+
                 const campaignsCollection = client.db('crowdcube').collection('campaign');
                 const userCampaigns = await campaignsCollection.find({ userEmail }).toArray();
                 res.json(userCampaigns);
@@ -144,8 +144,49 @@ async function connectMongoDB() {
                 res.status(500).json({ message: 'Error deleting campaign' });
             }
         });
-        
-        
+        // Update campaign by ID
+        app.put('/campaign/:id', async (req, res) => {
+            try {
+                const { id } = req.params;
+                const updatedCampaign = req.body;
+
+                const campaignsCollection = client.db('crowdcube').collection('campaign');
+                const result = await campaignsCollection.updateOne(
+                    { _id: new ObjectId(id) },
+                    { $set: updatedCampaign }
+                );
+
+                if (result.modifiedCount > 0) {
+                    res.status(200).json({ message: 'Campaign updated successfully' });
+                } else {
+                    res.status(404).json({ message: 'Campaign not found or no changes made' });
+                }
+            } catch (error) {
+                console.error('Error updating campaign:', error);
+                res.status(500).json({ message: 'Error updating campaign' });
+            }
+        });
+        // Route to fetch a specific campaign by ID
+        app.get('/updateCampaign/:id', async (req, res) => {
+            try {
+                const { id } = req.params;
+                const campaignsCollection = client.db('crowdcube').collection('campaign');
+                const campaign = await campaignsCollection.findOne({ _id: new ObjectId(id) });
+
+                if (campaign) {
+                    res.json(campaign);
+                } else {
+                    res.status(404).send({ message: 'Campaign not found' });
+                }
+            } catch (error) {
+                console.error('Error fetching campaign details:', error);
+                res.status(500).send({ message: 'Error fetching campaign details' });
+            }
+        });
+
+
+
+
 
 
         // Test route to check server status
